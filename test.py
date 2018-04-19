@@ -41,7 +41,6 @@ if (1):
 	"""
 	pass
 
-
 import urllib as ul
 import time
 import multiprocessing as mp
@@ -85,14 +84,29 @@ def pct_avail(data):
 	return (avail / total) * 100
 
 
-url_in = raw_input("input a url to check status of: ")
-min_in = raw_input("input amount of minutes: ")
-sec_in = raw_input("input amount of seconds: ")
+def main(urls, mins, secs):
 
-url_data = code_count(url_in, int(min_in), int(sec_in))[2]
+	for i in range(len(urls)):
+		print urls[i]
+		url_data = code_count(urls[i], mins, secs)
+		print url_data
+		print pct_avail(url_data[2])
 
-print url_data
-print pct_avail(url_data)
+	return
+
+
+
+url_in = raw_input("input a url, for multiple - separate by commas: ")
+min_in = int(raw_input("input amount of minutes: "))
+sec_in = int(raw_input("input amount of seconds: "))
+
+url_in = url_in.split(',')
+n = len(url_in)
+
+for i in range(n):
+	url_in[i] = url_in[i].strip()
+
+print main(url_in, min_in, sec_in)
 
 """
 output dashboard, include interesting parts of information
