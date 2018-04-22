@@ -87,12 +87,18 @@ def pct_avail(data):
 def main(urls, mins, secs):
 
 	for i in range(len(urls)):
-		print urls[i]
-		url_data = code_count(urls[i], mins, secs)
-		print url_data
-		print pct_avail(url_data[2])
-
-	return
+		print ""
+		url = urls[i]
+		print "visiting: " + url
+		url_data = code_count(url, mins, secs)
+		print "total response time: " + str(url_data[1])
+		print "total visits: " + str(sum(url_data[2].values()))
+		print "average response time: " + str(url_data[0])
+		print "code_distribution: " + str(url_data[2])
+		print "percent available: " + str(pct_avail(url_data[2]))
+	
+	print ""
+	return "program terminated"
 
 
 
@@ -113,6 +119,5 @@ output dashboard, include interesting parts of information
 add parallelization for multiple websites
 run an outer while loop that does the 10 minute check in the background
 """
-
 
 
