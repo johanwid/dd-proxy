@@ -61,7 +61,11 @@ def code_count(url, mins, secs):
 	duration = time.time() + (mins * 60) + (secs)
 	while (time.time() < duration):
 		start = time.time()
-		code = ul.urlopen(url).getcode()		# http status code
+		try:
+			ul.urlopen(url)
+			code = ul.urlopen(url).getcode()
+		except IOError:
+			code = -100
 		speed = time.time() - start
 		times.append(speed)
 		if code not in data:
@@ -78,7 +82,8 @@ def pct_avail(data):
 	avail = 0.0
 
 	for code in data.keys():
-		if code in good:
+		# if code in good:
+		if code > 0:
 			avail += data[code]
 
 	return (avail / total) * 100
@@ -92,7 +97,7 @@ def main(urls, mins, secs):
 		print "visiting: " + url
 		url_data = code_count(url, mins, secs)
 		print "total response time: " + str(url_data[1])
-		print "total visits: " + str(sum(url_data[2].values()))
+		print "total visits/attempts: " + str(sum(url_data[2].values()))
 		print "average response time: " + str(url_data[0])
 		print "code_distribution: " + str(url_data[2])
 		print "percent available: " + str(pct_avail(url_data[2]))
