@@ -49,10 +49,6 @@ import multiprocessing as mp
 
 LW = 2		# url loading leeway
 
-def average(array):
-	n = len(array) * 1.0
-	return sum(array) / n
-
 
 
 def code_count(url, mins, secs):
@@ -60,6 +56,7 @@ def code_count(url, mins, secs):
 	head = ['http://', 'https://']
 	codes = dict()
 	times = dict()
+	times_list = list()
 	isFirst = True;
 
 	if (url[0:7] not in head):
@@ -68,16 +65,18 @@ def code_count(url, mins, secs):
 	duration = time.time() + (mins * 60) + (secs)
 	while (time.time() < duration):
 		try:
-			if (isFirst):
+			if (len(times_list) != 0):
+				TO = max(times_list)
+				start = time.time()
+				ul.urlopen(url, timeout = TO * LW)
+				speed = time.time() - start
+				times_list.append(speed)
+			else:
 				start = time.time()
 				url_open = ul.urlopen(url)
 				url_open
 				speed = time.time() - start
-			else:
-				TO = max(times.values())
-				start = time.time()
-				ul.urlopen(url, timeout = TO * LW)
-				speed = time.time() - start
+				times_list.append(speed)
 			code = url_open.getcode()
 		except IOError:
 			code = -1
@@ -104,6 +103,12 @@ def pct_avail(data):
 			avail += data[code]
 
 	return (avail / total) * 100
+
+
+
+def average(array):
+	n = len(array) * 1.0
+	return sum(array) / n
 
 
 
