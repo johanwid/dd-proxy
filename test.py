@@ -47,17 +47,28 @@ import multiprocessing as mp
 
 
 
-LW = 2		# url loading leeway
+"""
+output dashboard, include interesting parts of information
+add parallelization for multiple websites
+run an outer while loop that does the 10 minute check in the background
+
+interesting things:
+how long site is down
+average time of outage
+average time between outages
+"""
 
 
 
 def code_count(url, mins, secs):
 	
 	head = ['http://', 'https://']
-	codes = dict()
-	times = dict()
-	times_list = list()
-	isFirst = True;
+	codes = dict()				# http code mapped to total occurrences
+	times = dict()				# http code mapped to sum of req durations
+	times_list = list()			# request durations
+	down_time = list()			# 
+	isDown = True;				# flag to modify time if site is down
+	LW = 2						# multiplie do xr for urlopen timeout
 
 	if (url[0:7] not in head):
 		return "invalid address. must begin with 'http://'"
@@ -149,12 +160,5 @@ def main():
 if __name__ == "__main__":
 	main()
 
-
-
-"""
-output dashboard, include interesting parts of information
-add parallelization for multiple websites
-run an outer while loop that does the 10 minute check in the background
-"""
 
 
