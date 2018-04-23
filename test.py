@@ -66,9 +66,10 @@ def code_count(url, mins, secs):
 	codes = dict()				# http code mapped to total occurrences
 	times = dict()				# http code mapped to sum of req durations
 	times_list = list()			# request durations
-	down_time = list()			# 
-	isDown = True;				# flag to modify time if site is down
-	LW = 2						# multiplie do xr for urlopen timeout
+	all_intervals = list()		# up and down times
+	isDown = False;				# flag to modify time if site is down
+	LW = 2						# multiplier for urlopen timeout
+	interval = 0				# initialize time interval of site being up
 
 	if (url[0:7] not in head):
 		return "invalid address. must begin with 'http://'"
@@ -89,8 +90,11 @@ def code_count(url, mins, secs):
 				speed = time.time() - start
 				times_list.append(speed)
 			code = url_open.getcode()
+			interval += speed
+			isDown = False
 		except IOError:
 			code = -1
+			isDown = True
 		if code not in codes:
 			codes[code] = 1.0
 		else:
@@ -99,8 +103,16 @@ def code_count(url, mins, secs):
 			times[code] = speed
 		else:
 			times[code] += speed
-	
-	return times, codes
+		if (isDown):
+			if (interval != 0):
+				all_intervals.append(interval)
+			interval = 0
+			isDown = False
+
+	if (not isDown):
+		all_intervals.append(interval)
+
+	return times, codes, all_intervals
 
 
 
@@ -133,9 +145,11 @@ def print_out(urls, mins, secs):
 		url_data = code_count(url, mins, secs)
 		times = url_data[0]
 		codes = url_data[1]
+		intervals = url_data[2]
 		
 		print times
 		print codes
+		print intervals
 	
 	return "\nprogram terminated"
 
