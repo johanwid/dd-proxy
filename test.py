@@ -41,83 +41,110 @@ if (1):
 	"""
 	pass
 
-import urllib as ul
+import urllib2 as ul
 import time
 import multiprocessing as mp
+
+
+
+LW = 2		# url loading leeway
 
 def average(array):
 	n = len(array) * 1.0
 	return sum(array) / n
 
+
+
 def code_count(url, mins, secs):
 	
 	head = ['http://', 'https://']
-	data = dict()
-	times = list()
+	codes = dict()
+	times = dict()
+	isFirst = True;
 
 	if (url[0:7] not in head):
 		return "invalid address. must begin with 'http://'"
 
 	duration = time.time() + (mins * 60) + (secs)
 	while (time.time() < duration):
-		start = time.time()
 		try:
-			ul.urlopen(url)
-			code = ul.urlopen(url).getcode()
+			if (isFirst):
+				start = time.time()
+				url_open = ul.urlopen(url)
+				url_open
+				speed = time.time() - start
+			else:
+				TO = max(times.values())
+				start = time.time()
+				ul.urlopen(url, timeout = TO * LW)
+				speed = time.time() - start
+			code = url_open.getcode()
 		except IOError:
-			code = -100
-		speed = time.time() - start
-		times.append(speed)
-		if code not in data:
-			data[code] = 1.0
+			code = -1
+		if code not in codes:
+			codes[code] = 1.0
 		else:
-			data[code] += 1.0
+			codes[code] += 1.0
+		if code not in times:
+			times[code] = speed
+		else:
+			times[code] += speed
 	
-	return average(times), sum(times), data
+	return times, codes
+
+
 
 def pct_avail(data):
 	
-	good = [200, 202]
 	total = sum(data.values())
 	avail = 0.0
 
 	for code in data.keys():
-		# if code in good:
 		if code > 0:
 			avail += data[code]
 
 	return (avail / total) * 100
 
 
-def main(urls, mins, secs):
+
+def print_out(urls, mins, secs):
 
 	for i in range(len(urls)):
 		print ""
 		url = urls[i]
 		print "visiting: " + url
+
 		url_data = code_count(url, mins, secs)
-		print "total response time: " + str(url_data[1])
-		print "total visits/attempts: " + str(sum(url_data[2].values()))
-		print "average response time: " + str(url_data[0])
-		print "code_distribution: " + str(url_data[2])
-		print "percent available: " + str(pct_avail(url_data[2]))
+		times = url_data[0]
+		codes = url_data[1]
+		
+		print times
+		print codes
 	
-	print ""
-	return "program terminated"
+	return "\nprogram terminated"
 
 
 
-url_in = raw_input("input a url, for multiple - separate by commas: ")
-min_in = int(raw_input("input amount of minutes: "))
-sec_in = int(raw_input("input amount of seconds: "))
+def main():
+	
+	url_in = raw_input("input a url, for multiple - separate by commas: ")
+	min_in = int(raw_input("input amount of minutes: "))
+	sec_in = int(raw_input("input amount of seconds: "))
+	url_in = url_in.split(',')
+	
+	n = len(url_in)
+	for i in range(n):
+		url_in[i] = url_in[i].strip()
 
-url_in = url_in.split(',')
-n = len(url_in)
+	print print_out(url_in, min_in, sec_in)	
+	return
 
-for i in range(n):
-	url_in[i] = url_in[i].strip()
 
-print main(url_in, min_in, sec_in)
+
+if __name__ == "__main__":
+	main()
+
+
 
 """
 output dashboard, include interesting parts of information
