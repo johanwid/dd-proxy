@@ -43,6 +43,7 @@ if (1):
 
 import urllib2 as ul
 import time
+import threading as th
 import multiprocessing as mp
 
 
@@ -67,7 +68,7 @@ note: interval may return empty if website never up or dne
 
 
 
-def code_count(url, mins, secs):
+def get_stats(url, timespan):
 	
 	begin = time.time()			# begging time for entire function
 	codes = dict()				# http code mapped to total occurrences
@@ -79,7 +80,8 @@ def code_count(url, mins, secs):
 	LW = 2						# multiplier for urlopen timeout
 	interval = 0				# initialize time interval of site being up
 
-	duration = time.time() + (mins * 60) + (secs)
+	duration = time.time() + timespan
+	# duration = time.time() + 30		
 	while (time.time() < duration):
 		try:
 			if (len(times_list) != 0):
@@ -140,26 +142,26 @@ def average(array):
 
 
 
-def print_out(urls, mins, secs):
+def print_out(url, timespan):
 
-	for i in range(len(urls)):
-		print ""
-		url = urls[i]
-		print "visiting: " + url
+	url_data = get_stats(url, timespan)
+	times = url_data[0]
+	codes = url_data[1]
+	intervals = url_data[2]
+	percent_up = min(100.0 * sum(intervals) / timespan, 100)
+	
+	print ""
+	print "visiting: " + url
+	print times
+	print codes
+	print intervals
+	print "percent up: " + str(percent_up) + "%"
+	print ""
+	return "success"
 
-		url_data = code_count(url, mins, secs)
-		total_time = (mins * 60) + secs
-		times = url_data[0]
-		codes = url_data[1]
-		intervals = url_data[2]
-		percent_up = min(100.0 * sum(intervals) / total_time, 100)
-		
-		print times
-		print codes
-		print intervals
-		print "percent up: " + percent_up + "%"
 
-	return
+def parallel(args):
+	return print_out(*args)
 
 
 
@@ -168,14 +170,17 @@ def main():
 	url_in = raw_input("input a url, for multiple - separate by commas: ")
 	min_in = int(raw_input("input amount of minutes for interval: "))
 	sec_in = int(raw_input("input amount of seconds for interval: "))
-	url_in = url_in.split(',')
 	
+	timespan = (min_in * 60) + (sec_in)
+	url_in = url_in.split(',')
 	n = len(url_in)
 	for i in range(n):
-		url_in[i] = url_in[i].strip()
+		url_in[i] = (url_in[i].strip(), timespan) 
 
 	while (1):
-		print print_out(url_in, min_in, sec_in)
+		p = mp.Pool(5)
+		print "(re)initializing"
+		print p.map(parallel, url_in)
 	
 	return
 
