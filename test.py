@@ -6,19 +6,6 @@ import multiprocessing as mp
 
 
 
-"""
-output dashboard, include interesting parts of information
-add parallelization for multiple websites
-run an outer while loop that does the 10 minute check in the background
-
-interesting things:
-average time between outages
-
-note: interval may return empty if website never up or dne
-"""
-
-
-
 def get_stats(url, timespan):
 	
 	begin = time.time()			# begging time for entire function
@@ -117,6 +104,7 @@ def print_out(url, timespan):
 
 	print ""
 	print "Visiting: " + url
+	print "Interval: " + str(timespan) + "s"
 	print "Total requests: " + str(int(tot_req))
 	try:
 		print "Fastest request: " + str(min(all_times)) + "s"
@@ -141,8 +129,6 @@ def print_out(url, timespan):
 		print "Percent up: " + str(percent_up) + "%"
 		print "Time up: " + str(time_up) + "s. Time down: " + str(max(0, 
 			timespan - time_up)) + "s"
-	if (average(intervals) < timespan):
-		print "Average time between outages: " + str(average(intervals)) + "s"
 	print ""
 
 	return "Successful iteration"
@@ -161,10 +147,13 @@ def main():
 	sec_in = int(raw_input("input amount of seconds for interval: "))
 	
 	timespan = (min_in * 60) + (sec_in)
+	largerspan = 1 * 60
 	url_in = url_in.split(',')
 	n = len(url_in)
 	for i in range(n):
-		url_in[i] = (url_in[i].strip(), timespan) 
+		url = url_in[i].strip()
+		url_in[i] = (url, timespan)
+
 
 	while (1):
 		p = mp.Pool(5)
