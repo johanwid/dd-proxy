@@ -1,46 +1,4 @@
 
-if (1): 
-	"""
-	Website availability & performance monitoring
-
-	The problem / assignment
-
-	OVERVIEW
-
-	- Create a console program to monitor performance and 
-	  availability of websites
-	- Websites and check intervals are user defined
-	- Users can keep the console app running and monitor the websites
-
-	STATS
-
-	-  Check the different websites with their corresponding check intervals
-	   -  Compute a few interesting metrics: availability, max/avg 
-	   	  response times, response codes count and more...
-	   -  Over different timeframes: 2 minutes and 10 minutes
-	-  Every 10s, display the stats for the past 10 minutes for each website
-	-  Every minute, displays the stats for the past hour for each website
-
-	ALERTING
-
-	-  When a website availability is below 80% for the past 2 minutes, 
-	   add a message saying that 
-	   "Website {website} is down. availability={availablility}, time={time}"
-	-  When availability resumes for the past 2 minutes, add another 
-	   message detailing when the alert recovered
-	-  Make sure all messages showing when alerting thresholds are crossed 
-	   remain visible on the page for historical reasons
-
-	TESTS & QUESTIONS
-
-	- Write a test for the alerting logic
-	- Explain how you'd improve on this application design
-
-	http://www.imdb.com
-
-	"""
-	pass
-
 import requests as rq
 import time
 import threading as th
@@ -54,14 +12,7 @@ add parallelization for multiple websites
 run an outer while loop that does the 10 minute check in the background
 
 interesting things:
-how long site is down
-average time of outage
 average time between outages
-
-deliverables:
-availability
-max/avg response times
-response codes count
 
 note: interval may return empty if website never up or dne
 """
@@ -77,11 +28,10 @@ def get_stats(url, timespan):
 	all_intervals = list()		# up and down times
 	isDown = False;				# flag to modify time if site is down
 	speed = None;				# in case website is never up / dne
-	LW = 2						# multiplier for urlopen timeout
+	LW = 3						# multiplier for urlopen timeout
 	interval = 0				# initialize time interval of site being up
 
-	duration = time.time() + timespan
-	# duration = time.time() + 30		
+	duration = time.time() + timespan	# one minute	
 	while (time.time() < duration):
 		try:
 			if (len(times_list) != 0):
@@ -119,7 +69,7 @@ def get_stats(url, timespan):
 	if (not isDown):
 		all_intervals.append(interval)
 
-	return times, codes, all_intervals
+	return times, codes, all_intervals, times_list
 
 
 
@@ -137,8 +87,11 @@ def pct_avail(data):
 
 
 def average(array):
-	n = len(array) * 1.0
-	return sum(array) / n
+	n = len(array) * 1.0	
+	if int(n) != 0:
+		return sum(array) / n
+	else:
+		return 0
 
 
 
@@ -149,15 +102,51 @@ def print_out(url, timespan):
 	codes = url_data[1]
 	intervals = url_data[2]
 	percent_up = min(100.0 * sum(intervals) / timespan, 100)
-	
+	all_times = url_data[3]
+
+	try:
+		del times[-1]
+	except KeyError:
+		pass
+	try:
+		del codes[-1]
+	except KeyError:
+		pass
+	time_up = sum(times.values())
+	tot_req = sum(codes.values())
+
 	print ""
-	print "visiting: " + url
-	print times
-	print codes
-	print "site down for: " + str(timespan- sum(intervals))
-	print "percent up: " + str(percent_up) + "%"
+	print "Visiting: " + url
+	print "Total requests: " + str(int(tot_req))
+	try:
+		print "Fastest request: " + str(min(all_times)) + "s"
+	except ValueError:
+		pass
+	try:
+		print "Slowest request: " + str(max(all_times)) + "s"
+	except ValueError:
+		pass
+	print "Average request time: " + str(average(all_times)) + "s"
+	print "Total time per status code: " + str(times)
+	print "Total requests per status code: " + str(codes)
+	print "Site down for: " + str(max(timespan- sum(intervals), 0)) + "s"
+	if percent_up < 80:
+		print "!!! ALERT !!!"
+		print "Website " + str(url) + " is down." 
+		print "!!! ALERT !!!"
+		print "Availability = " + str(percent_up) + "%"
+		print "Time up: " + str(time_up) + "s. Time down: " + str(max(0, 
+			timespan - time_up)) + "s"
+	else:
+		print "Percent up: " + str(percent_up) + "%"
+		print "Time up: " + str(time_up) + "s. Time down: " + str(max(0, 
+			timespan - time_up)) + "s"
+	if (average(intervals) < timespan):
+		print "Average time between outages: " + str(average(intervals)) + "s"
 	print ""
-	return "success"
+
+	return "Successful iteration"
+
 
 
 def parallel(args):
@@ -190,4 +179,4 @@ if __name__ == "__main__":
 	main()
 
 
-
+# https://www.datadoghq.com, http://www.apple.com
