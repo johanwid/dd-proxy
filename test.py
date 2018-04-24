@@ -41,7 +41,7 @@ if (1):
 	"""
 	pass
 
-import urllib2 as ul
+import requests as rq
 import time
 import threading as th
 import multiprocessing as mp
@@ -87,16 +87,16 @@ def get_stats(url, timespan):
 			if (len(times_list) != 0):
 				TO = max(times_list)
 				start = time.time()
-				ul.urlopen(url, timeout = TO * LW)
+				rq.get(url, timeout = TO * LW)
 				speed = time.time() - start
 				times_list.append(speed)
 			else:
 				start = time.time()
-				url_open = ul.urlopen(url)
+				url_open = rq.get(url)
 				url_open
 				speed = time.time() - start
 				times_list.append(speed)
-			code = url_open.getcode()
+			code = url_open.status_code
 			interval += speed
 			isDown = False
 		except IOError:
@@ -154,7 +154,7 @@ def print_out(url, timespan):
 	print "visiting: " + url
 	print times
 	print codes
-	print intervals
+	print "site down for: " + str(timespan- sum(intervals))
 	print "percent up: " + str(percent_up) + "%"
 	print ""
 	return "success"
