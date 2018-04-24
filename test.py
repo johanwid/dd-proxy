@@ -56,23 +56,28 @@ interesting things:
 how long site is down
 average time of outage
 average time between outages
+
+deliverables:
+availability
+max/avg response times
+response codes count
+
+note: interval may return empty if website never up or dne
 """
 
 
 
 def code_count(url, mins, secs):
 	
-	head = ['http://', 'https://']
+	begin = time.time()			# begging time for entire function
 	codes = dict()				# http code mapped to total occurrences
 	times = dict()				# http code mapped to sum of req durations
 	times_list = list()			# request durations
 	all_intervals = list()		# up and down times
 	isDown = False;				# flag to modify time if site is down
+	speed = None;				# in case website is never up / dne
 	LW = 2						# multiplier for urlopen timeout
 	interval = 0				# initialize time interval of site being up
-
-	if (url[0:7] not in head):
-		return "invalid address. must begin with 'http://'"
 
 	duration = time.time() + (mins * 60) + (secs)
 	while (time.time() < duration):
@@ -99,15 +104,15 @@ def code_count(url, mins, secs):
 			codes[code] = 1.0
 		else:
 			codes[code] += 1.0
-		if code not in times:
-			times[code] = speed
-		else:
-			times[code] += speed
+		if speed != None:
+			if code not in times:
+				times[code] = speed
+			else:
+				times[code] += speed
 		if (isDown):
 			if (interval != 0):
 				all_intervals.append(interval)
 			interval = 0
-			isDown = False
 
 	if (not isDown):
 		all_intervals.append(interval)
@@ -143,30 +148,35 @@ def print_out(urls, mins, secs):
 		print "visiting: " + url
 
 		url_data = code_count(url, mins, secs)
+		total_time = (mins * 60) + secs
 		times = url_data[0]
 		codes = url_data[1]
 		intervals = url_data[2]
+		percent_up = min(100.0 * sum(intervals) / total_time, 100)
 		
 		print times
 		print codes
 		print intervals
-	
-	return "\nprogram terminated"
+		print "percent up: " + percent_up + "%"
+
+	return
 
 
 
 def main():
 	
 	url_in = raw_input("input a url, for multiple - separate by commas: ")
-	min_in = int(raw_input("input amount of minutes: "))
-	sec_in = int(raw_input("input amount of seconds: "))
+	min_in = int(raw_input("input amount of minutes for interval: "))
+	sec_in = int(raw_input("input amount of seconds for interval: "))
 	url_in = url_in.split(',')
 	
 	n = len(url_in)
 	for i in range(n):
 		url_in[i] = url_in[i].strip()
 
-	print print_out(url_in, min_in, sec_in)	
+	while (1):
+		print print_out(url_in, min_in, sec_in)
+	
 	return
 
 
